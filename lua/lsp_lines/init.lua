@@ -29,6 +29,8 @@ end
 M.setup = function(options)
   require("lsp_lines.config").setup(options)
 
+  local config = require("lsp_lines.config").config
+
   vim.api.nvim_create_augroup("LspLines", { clear = true })
   -- TODO: On LSP restart (e.g.: diagnostics cleared), errors don't go away.
   vim.diagnostic.handlers.virtual_lines = {
@@ -37,6 +39,11 @@ M.setup = function(options)
     ---@param diagnostics table
     ---@param opts boolean|Opts
     show = function(namespace, bufnr, diagnostics, opts)
+      local ft = vim.bo[bufnr].filetype
+      if config.disabled_filetype_map[ft] then
+        return
+      end
+
       local ns = vim.diagnostic.get_namespace(namespace)
       if not ns.user_data.virt_lines_ns then
         ns.user_data.virt_lines_ns = vim.api.nvim_create_namespace("")
@@ -71,6 +78,7 @@ end
 
 ---@return boolean
 M.toggle = function()
+  ---@diagnostic disable-next-line: undefined-field
   local new_value = not vim.diagnostic.config().virtual_lines
   vim.diagnostic.config({ virtual_lines = new_value })
   return new_value
